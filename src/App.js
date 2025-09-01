@@ -16,9 +16,9 @@ const OrderDetailsModal = ({ order, onClose }) => {
   if (!order) return null;
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-IN', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'INR'
     }).format(parseFloat(amount) || 0);
   };
 
@@ -182,23 +182,17 @@ const OrderDetailsModal = ({ order, onClose }) => {
             <h3 className="text-lg font-semibold text-gray-900 mb-3">Order Summary</h3>
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span>Subtotal:</span>
+                <span>Total:</span>
                 <span>{formatCurrency(order.subtotal)}</span>
               </div>
-              <div className="flex justify-between">
-                <span>Delivery Fee:</span>
-                <span>{formatCurrency(order.delivery_fee)}</span>
-              </div>
+           
               {order.discount > 0 && (
                 <div className="flex justify-between text-green-600">
                   <span>Discount:</span>
                   <span>-{formatCurrency(order.discount)}</span>
                 </div>
               )}
-              <div className="flex justify-between font-bold text-lg border-t border-gray-200 pt-2">
-                <span>Total:</span>
-                <span>{formatCurrency(order.total_amount)}</span>
-              </div>
+             
             </div>
           </div>
 
@@ -437,7 +431,6 @@ const AdminPanel = () => {
   }, []);
 
   // ✅ COMPLETELY FIXED Category API functions with comprehensive error handling
-// COMPLETELY FIXED Category API functions with comprehensive error handling
   const createCategoryApi = async (payload) => {
     console.log('CREATE CATEGORY - Starting with payload:', payload);
     
@@ -898,11 +891,11 @@ const AdminPanel = () => {
     }
   }, [fetchOrders, ordersPagination, ordersSearchTerm]);
 
-  // Format currency
+  // Format currency - ✅ UPDATED to use INR (Rupees)
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-IN', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'INR'
     }).format(parseFloat(amount) || 0);
   };
 
@@ -962,7 +955,7 @@ const AdminPanel = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               <StatCard
                 title="Total Revenue"
-                value="$12,450"
+                value="₹12,450"
                 icon={DollarSign}
                 color="from-green-500 to-emerald-600"
                 change="12.5"
@@ -1183,9 +1176,9 @@ const AdminPanel = () => {
                         <p className="text-gray-400 text-sm">Category: {product.category?.name || 'N/A'}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xl font-bold text-blue-600">${product.price}</p>
+                        <p className="text-xl font-bold text-blue-600">₹{product.price}</p>
                         {product.sale_price && (
-                          <p className="text-sm text-red-500 line-through">${product.sale_price}</p>
+                          <p className="text-sm text-red-500 line-through">₹{product.sale_price}</p>
                         )}
                       </div>
                     </div>
@@ -1527,7 +1520,7 @@ const AdminPanel = () => {
                     </div>
                     <div>
                       <p className="text-xs text-gray-500">Total Spent</p>
-                      <p className="text-lg font-bold text-green-600">${user.totalSpent}</p>
+                      <p className="text-lg font-bold text-green-600">₹{user.totalSpent}</p>
                     </div>
                   </div>
 
