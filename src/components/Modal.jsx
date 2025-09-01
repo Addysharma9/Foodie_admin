@@ -101,20 +101,24 @@ const Modal = React.memo(function Modal({
     return Math.round((numPrice - discountAmount) * 100) / 100;
   }, []);
 
-  const handleImageUpload = useCallback(
+const handleImageUpload = useCallback(
     (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
+      
+      // Store the actual File object, not the base64 string
       const reader = new FileReader();
       reader.onload = (ev) => {
         const base64String = ev.target?.result || '';
         setImagePreview(String(base64String));
-        setLocalData((prev) => ({
-          ...prev,
-          [modalType === 'product' ? 'featured_image' : 'image']: base64String
-        }));
       };
       reader.readAsDataURL(file);
+      
+      // Store the actual File object in localData
+      setLocalData((prev) => ({
+        ...prev,
+        [modalType === 'product' ? 'featured_image' : 'image']: file
+      }));
     },
     [modalType]
   );
