@@ -11,7 +11,7 @@ import StatCard from './components/StatCard';
 
 const API_ORIGIN = 'http://212.38.94.189:8000';
 
-// ✅ ENHANCED OrderDetailsModal Component with Better Address Display
+// ✅ ENHANCED OrderDetailsModal Component with FIXED Pricing Calculation
 const OrderDetailsModal = ({ order, onClose }) => {
   if (!order) return null;
 
@@ -43,6 +43,20 @@ const OrderDetailsModal = ({ order, onClose }) => {
       'cancelled': 'bg-red-100 text-red-800'
     };
     return colors[status] || 'bg-gray-100 text-gray-800';
+  };
+
+  // ✅ FIXED: Function to get the correct effective price (sale price if available, otherwise regular price)
+  const getEffectivePrice = (product) => {
+    return product.sale_price && parseFloat(product.sale_price) > 0 
+      ? parseFloat(product.sale_price) 
+      : parseFloat(product.unit_price || product.price || 0);
+  };
+
+  // ✅ FIXED: Function to calculate total price correctly
+  const calculateTotalPrice = (product) => {
+    const effectivePrice = getEffectivePrice(product);
+    const quantity = parseInt(product.quantity) || 1;
+    return effectivePrice * quantity;
   };
 
   return (
@@ -140,59 +154,127 @@ const OrderDetailsModal = ({ order, onClose }) => {
             </div>
           </div>
 
-          {/* Order Items */}
+          {/* ✅ FIXED Order Items with Correct Pricing Calculation */}
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-3">Order Items</h3>
             <div className="space-y-3">
-              {order.products?.map((product, index) => (
-                <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-4">
-                    <img
-                      src={product.image || '/api/placeholder/60/60'}
-                      alt={product.name}
-                      className="w-15 h-15 object-cover rounded-lg"
-                    />
-                    <div>
-                      <h4 className="font-medium text-gray-900">{product.name}</h4>
-                      <p className="text-sm text-gray-500">{product.description}</p>
-                      <p className="text-sm text-gray-600">
-                        Quantity: {product.quantity} × {formatCurrency(product.unit_price)}
-                      </p>
-                      {product.spice_level && (
-                        <span className={`inline-block px-2 py-1 text-xs rounded-full mt-1 ${
-                          product.spice_level === 'hot' ? 'bg-red-100 text-red-800' :
-                          product.spice_level === 'medium' ? 'bg-orange-100 text-orange-800' :
-                          'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {product.spice_level}
-                        </span>
+              {order.products?.map((product, index) => {
+                const effectivePrice = getEffectivePrice(product);
+                const totalPrice = calculateTotalPrice(product);
+                const hasDiscount = product.sale_price && parseFloat(product.sale_price) > 0 && parseFloat(product.sale_price) < parseFloat(product.unit_price || product.price || 0);
+
+                return (
+                  <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center space-x-4">
+                      <img
+                        src={product.image || '/api/placeholder/60/60'}
+                        alt={product.name}
+                        className="w-15 h-15 object-cover rounded-lg"
+                      />
+                      <div>
+                        <h4 className="font-medium text-gray-900">{product.name}</h4>
+                        <p className="text-sm text-gray-500">{product.description}</p>
+                        
+                        {/* ✅ FIXED: Show pricing with discount information */}
+                        <div className="text-sm text-gray-600 mt-1">
+                          <span>Quantity: {product.quantity} × </span>
+                          {hasDiscount ? (
+                            <span className="space-x-2">
+                              <span className="text-green-600 font-semibold">{formatCurrency(effectivePrice)}</span>
+                              <span className="line-through text-gray-400">{formatCurrency(product.unit_price || product.price)}</span>
+                              <span className="text-xs bg-green-100 text-green-800 px-1 py-0.5 rounded">SALE</span>
+                            </span>
+                          ) : (
+                            <span className="font-semibold">{formatCurrency(effectivePrice)}</span>
+                          )}
+                        </div>
+
+                        {product.spice_level && (
+                          <span className={`inline-block px-2 py-1 text-xs rounded-full mt-1 ${
+                            product.spice_level === 'hot' ? 'bg-red-100 text-red-800' :
+                            product.spice_level === 'medium' ? 'bg-orange-100 text-orange-800' :
+                            'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {product.spice_level}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      {/* ✅ FIXED: Show correct total price */}
+                      <p className="font-semibold text-lg">{formatCurrency(totalPrice)}</p>
+                      {hasDiscount && (
+                        <div className="text-xs text-gray-500">
+                          <span className="line-through">{formatCurrency((parseFloat(product.unit_price || product.price) * parseInt(product.quantity)))}</span>
+                          <span className="text-green-600 ml-1">
+                            Save {formatCurrency((parseFloat(product.unit_price || product.price) - effectivePrice) * parseInt(product.quantity))}
+                          </span>
+                        </div>
                       )}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-semibold">{formatCurrency(product.total_price)}</p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
-          {/* Order Summary */}
+          {/* ✅ FIXED Order Summary with Corrected Calculations */}
           <div className="border-t border-gray-200 pt-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-3">Order Summary</h3>
             <div className="space-y-2">
-              <div className="flex justify-between">
-                <span>Total:</span>
-                <span>{formatCurrency(order.subtotal)}</span>
-              </div>
-           
-              {order.discount > 0 && (
-                <div className="flex justify-between text-green-600">
-                  <span>Discount:</span>
-                  <span>-{formatCurrency(order.discount)}</span>
-                </div>
-              )}
-             
+              {/* Calculate subtotal from actual product prices */}
+              {(() => {
+                const calculatedSubtotal = order.products?.reduce((sum, product) => {
+                  return sum + calculateTotalPrice(product);
+                }, 0) || 0;
+
+                const originalTotal = order.products?.reduce((sum, product) => {
+                  const originalPrice = parseFloat(product.unit_price || product.price || 0);
+                  const quantity = parseInt(product.quantity) || 1;
+                  return sum + (originalPrice * quantity);
+                }, 0) || 0;
+
+                const totalSavings = originalTotal - calculatedSubtotal;
+
+                return (
+                  <>
+                    {/* Show original total if there are discounts */}
+                    {totalSavings > 0 && (
+                      <div className="flex justify-between text-gray-500">
+                        <span>Original Total:</span>
+                        <span className="line-through">{formatCurrency(originalTotal)}</span>
+                      </div>
+                    )}
+                    
+                    <div className="flex justify-between">
+                      <span>Subtotal:</span>
+                      <span>{formatCurrency(calculatedSubtotal)}</span>
+                    </div>
+
+                    {/* Show total discount if applicable */}
+                    {totalSavings > 0 && (
+                      <div className="flex justify-between text-green-600 font-medium">
+                        <span>Total Discount:</span>
+                        <span>-{formatCurrency(totalSavings)}</span>
+                      </div>
+                    )}
+
+                    {/* Additional discounts from coupons etc */}
+                    {order.discount > 0 && (
+                      <div className="flex justify-between text-green-600">
+                        <span>Additional Discount:</span>
+                        <span>-{formatCurrency(order.discount)}</span>
+                      </div>
+                    )}
+
+                    {/* Final Total */}
+                    <div className="flex justify-between text-lg font-bold border-t pt-2">
+                      <span>Total:</span>
+                      <span>{formatCurrency(order.total_amount || calculatedSubtotal - (order.discount || 0))}</span>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
 
@@ -343,6 +425,8 @@ const AdminPanel = () => {
       if (search) url.searchParams.append('search', search);
 
       const response = await fetch(url.toString());
+      console.log(response);
+      
       if (!response.ok) throw new Error('Failed to fetch orders');
       const data = await response.json();
 
